@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA / 桌面圖示 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="光耀運勢">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0E0C09">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="">
+    <link id="favicon" rel="icon" type="image/png" href="">
+    <title>光耀 每日運勢播報站</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #F7F6F5; color: #333333; }
+        .font-serif { font-family: 'Noto Serif TC', serif; }
+        .color-wood  { color: #6B7A6A; }
+        .color-fire  { color: #A65B54; }
+        .color-earth { color: #B0A18E; }
+        .color-metal { color: #C5B276; }
+        .color-water { color: #5B6E80; }
+        .border-thin { border: 0.5px solid #E0DCD3; }
+        select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+        .pillar-card { border: 0.5px solid #E0DCD3; border-radius: 2px; }
+        .btn-calc { background-color: #333; color: #fff; border: none; border-radius: 2px; cursor: pointer; }
+        .swatch { width: 16px; height: 16px; border-radius: 50%; display: inline-block; vertical-align: middle; border: 0.5px solid #ddd; flex-shrink: 0; }
+        .tag-ma  { background:#EEF1ED; color:#6B7A6A; }
+        .tag-hua { background:#F9EEF0; color:#A65B54; }
+        .tag-ku  { background:#F4F1EB; color:#B0A18E; }
+    </style>
+</head>
+<body class="py-6 px-4 pb-10">
+<div class="w-full max-w-md mx-auto">
+
+    <header class="text-center mb-6">
+        <div class="text-[9px] tracking-widest text-gray-400 uppercase mb-0.5">Guang Yao BaZi</div>
+        <h1 class="text-xl font-bold tracking-widest font-serif">光耀 每日運勢播報站</h1>
+        <p class="text-[11px] text-gray-400 mt-0.5">流日天機 · 知命善用</p>
+    </header>
+
+    <section class="bg-white border-thin rounded-sm p-4 mb-4 text-center">
+        <div class="text-[11px] text-gray-400 tracking-wider mb-1" id="currentDateText">公曆載入中…</div>
+        <div class="text-xs font-medium mb-2" id="lunarDateText">舊曆載入中…</div>
+        <hr class="border-t-[0.5px] border-[#E0DCD3] my-2 w-8 mx-auto">
+        <div class="text-[10px] text-gray-400 mb-0.5">今日流日</div>
+        <div class="text-2xl font-bold font-serif my-1" id="flowDayPillar">--</div>
+        <div class="text-[11px] text-gray-500 font-serif mt-1" id="jieQiText">節氣載入中…</div>
+    </section>
+
+    <section class="bg-white border-thin rounded-sm p-4 mb-4">
+        <div class="font-serif text-xs font-bold tracking-wider pb-2 border-b-[0.5px] border-[#E0DCD3] mb-3">今日穿衣吉色</div>
+        <div id="colorAdvice" class="text-[11px] text-gray-600 leading-relaxed">載入中…</div>
+    </section>
+
+    <section class="bg-white border-thin rounded-sm p-4 mb-4">
+        <div class="font-serif text-xs font-bold tracking-wider pb-2 border-b-[0.5px] border-[#E0DCD3] mb-3 flex justify-between items-center">
+            <span>八字排盤</span>
+            <span class="text-[10px] font-sans text-gray-400 font-normal">輸入出生資料</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+                <label class="text-[10px] text-gray-400 block mb-1">出生年</label>
+                <select id="birthYear" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-400 block mb-1">出生月</label>
+                <select id="birthMonth" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-400 block mb-1">出生日</label>
+                <select id="birthDay" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-400 block mb-1">出生時辰</label>
+                <select id="birthHour" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6">
+                    <option value="23">子時 23–01時</option>
+                    <option value="1">丑時 01–03時</option>
+                    <option value="3">寅時 03–05時</option>
+                    <option value="5">卯時 05–07時</option>
+                    <option value="7">辰時 07–09時</option>
+                    <option value="9">巳時 09–11時</option>
+                    <option value="11">午時 11–13時</option>
+                    <option value="13">未時 13–15時</option>
+                    <option value="15">申時 15–17時</option>
+                    <option value="17">酉時 17–19時</option>
+                    <option value="19">戌時 19–21時</option>
+                    <option value="21">亥時 21–23時</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="calcBaZi()" class="btn-calc w-full py-2 text-xs tracking-widest font-serif mt-1">排 盤</button>
+        <div id="baziResult" class="mt-4 hidden">
+            <div class="flex flex-row-reverse gap-1.5 mb-3" id="pillarsGrid"></div>
+            <div class="border-thin rounded-sm p-3 text-center bg-[#FAFAF9]" id="dayMasterBox"></div>
+        </div>
+    </section>
+
+    <section class="bg-white border-thin rounded-sm p-4 mb-4 hidden" id="fortuneSection">
+        <div class="font-serif text-xs font-bold tracking-wider pb-2 border-b-[0.5px] border-[#E0DCD3] mb-3 flex justify-between items-center">
+            <span>今日運勢解析</span>
+            <span class="text-[10px] font-sans text-gray-400 font-normal" id="fortuneSectionLabel"></span>
+        </div>
+        <div id="fortuneDetail"></div>
+    </section>
+
+    <div class="text-center mt-6 mb-2 px-2">
+        <p class="text-[10px] text-gray-400 leading-relaxed font-light">
+            本網站內容依傳統命理推算，僅供參考與娛樂用途。<br>
+            命運掌握在自己手中，請勿過度迷信，遇重大決策宜多方考量。
+        </p>
+    </div>
+
+</div>
+<script>
+var PILLAR_LABELS = ['年柱','月柱','日柱','時柱'];
+var STEM_DATA = {
+    '甲':{wuxing:'木',yang:true},'乙':{wuxing:'木',yang:false},
+    '丙':{wuxing:'火',yang:true},'丁':{wuxing:'火',yang:false},
+    '戊':{wuxing:'土',yang:true},'己':{wuxing:'土',yang:false},
+    '庚':{wuxing:'金',yang:true},'辛':{wuxing:'金',yang:false},
+    '壬':{wuxing:'水',yang:true},'癸':{wuxing:'水',yang:false}
+};
+var RELATIONS = {
+    '木':{'木':'比劫','火':'食傷','土':'財星','金':'官殺','水':'印星'},
+    '火':{'木':'印星','火':'比劫','土':'食傷','金':'財星','水':'官殺'},
+    '土':{'木':'官殺','火':'印星','土':'比劫','金':'食傷','水':'財星'},
+    '金':{'木':'財星','火':'官殺','土':'印星','金':'比劫','水':'食傷'},
+    '水':{'木':'食傷','火':'財星','土':'官殺','金':'印星','水':'比劫'}
+};
+var WUXING_BG = {'木':'#EEF1ED','火':'#F5EDEC','土':'#F4F1EB','金':'#F5F2E8','水':'#EBF0F4'};
+var COLOR_MAP = {
+    '木':{good:[{name:'綠色',hex:'#6B7A6A'},{name:'青色',hex:'#7BA7A0'},{name:'藍綠',hex:'#5B8C8A'}],avoid:[{name:'白色',hex:'#E8E4DC'},{name:'金色',hex:'#C5B276'}],desc:'今日木氣旺，宜穿綠、青、藍綠系，順應天地生機，助旺精神氣場。'},
+    '火':{good:[{name:'紅色',hex:'#A65B54'},{name:'橘色',hex:'#C97B4A'},{name:'紫色',hex:'#8B6B8A'}],avoid:[{name:'黑色',hex:'#444444'},{name:'深藍',hex:'#3A4E6B'}],desc:'今日火氣旺，宜穿紅、橘、紫系，彰顯熱情氣場，提振日間能量。'},
+    '土':{good:[{name:'黃色',hex:'#C9B96A'},{name:'米色',hex:'#B0A18E'},{name:'棕色',hex:'#8B7355'}],avoid:[{name:'綠色',hex:'#6B7A6A'},{name:'青色',hex:'#7BA7A0'}],desc:'今日土氣旺，宜穿黃、米、棕系，穩固根基，有助集中心神。'},
+    '金':{good:[{name:'白色',hex:'#E8E4DC'},{name:'金色',hex:'#C5B276'},{name:'銀灰',hex:'#B0B0B0'}],avoid:[{name:'紅色',hex:'#A65B54'},{name:'橘色',hex:'#C97B4A'}],desc:'今日金氣旺，宜穿白、金、銀系，清晰思路，利於溝通與決斷。'},
+    '水':{good:[{name:'黑色',hex:'#333333'},{name:'深藍',hex:'#3A4E6B'},{name:'灰色',hex:'#888888'}],avoid:[{name:'黃色',hex:'#C9B96A'},{name:'棕色',hex:'#8B7355'}],desc:'今日水氣旺，宜穿黑、深藍、灰系，沉靜內斂，利於思考與謀略。'}
+};
+var BRANCH_TYPE = {
+    '寅':'馬','申':'馬','巳':'馬','亥':'馬',
+    '子':'花','午':'花','卯':'花','酉':'花',
+    '辰':'庫','戌':'庫','丑':'庫','未':'庫'
+};
+var BRANCH_TYPE_CLASS = {'馬':'tag-ma','花':'tag-hua','庫':'tag-ku'};
+// ── 十神文案庫（每個十神 10 組，隨機抽取）──
+var FORTUNE_POOL = {
+'比肩':[
+  {luck:'平',desc:'今日易得同儕共鳴，適合團隊聚會，但需多聽取他人意見。',yi:'團隊聚會、交流合作、分工推進',ji:'單打獨鬥、強行主導、借錢給人'},
+  {luck:'中吉',desc:'自我意志堅定，執行力強，適合獨立完成延宕已久的計畫。',yi:'獨立執行計畫、突破拖延、展現主導力',ji:'盲目跟風、人云亦云、過度依賴他人'},
+  {luck:'平',desc:'與朋友互動頻繁，聊天敘舊能帶來好心情，注意收斂主觀意識。',yi:'敘舊聯絡、維繫老友情誼、輕鬆社交',ji:'主觀強加意見、爭論是非、衝動決策'},
+  {luck:'平',desc:'生活節奏平穩，適合按部就班處理庶務，不宜盲目跟風投資。',yi:'按部就班處理事務、規律作息、整理環境',ji:'跟風投資、輕信傳言、急於求成'},
+  {luck:'中吉',desc:'職場上易遇志同道合的夥伴，攜手推進項目事半功倍。',yi:'尋找合作夥伴、項目協作、資源整合',ji:'獨攬功勞、排擠隊友、固執己見'},
+  {luck:'平',desc:'自我意識抬頭，適合自我反省與沉澱，溝通時請保持彈性。',yi:'自我反省、靜心沉澱、傾聽他人',ji:'意氣之爭、過度競爭、強迫他人認同'},
+  {luck:'中吉',desc:'社交運勢上升，多參加活動有機會結識擴展人脈的好友。',yi:'參加社交活動、拓展人脈、主動出擊',ji:'閉門造車、被動等待、拒絕邀約'},
+  {luck:'平',desc:'平淡即是福，今日適合規律作息，避免因意氣之爭而傷和氣。',yi:'規律作息、維持和諧、低調行事',ji:'意氣之爭、情緒衝動、硬碰硬'},
+  {luck:'中吉',desc:'信心滿滿的一天，適合為自己爭取權益，主動出擊勝算大。',yi:'爭取應得權益、主動表達需求、自我行銷',ji:'過度謙遜、壓抑需求、放棄爭取'},
+  {luck:'平',desc:'易與身邊人產生想法碰撞，宜求同存異，抱持開放心態。',yi:'求同存異、聆聽不同觀點、保持彈性',ji:'固執己見、爭辯對錯、不尊重他人'}
+],
+'劫財':[
+  {luck:'平',desc:'花費欲望較強，容易衝動購物，出門前建議先列好清單。',yi:'列清單購物、理性消費、靜觀其變',ji:'衝動網購、輕信他人推薦、大額投資'},
+  {luck:'小凶',desc:'職場競爭感加劇，需防範口舌之爭，保持低調專注自身。',yi:'低調行事、專注本職、提升自身實力',ji:'口舌之爭、公開競爭、情緒爆發'},
+  {luck:'平',desc:'今日人情應酬較多，雖有荷包失血的情況，但能累積人脈。',yi:'維繫人脈、應酬交際、廣結善緣',ji:'過度花費、財務衝動、輕信投資話術'},
+  {luck:'平',desc:'心思起伏較大，做重大決策前宜三思，切忌心急求快。',yi:'三思而後行、保守理財、放慢節奏',ji:'心急求快、輕舉妄動、重大決策'},
+  {luck:'小凶',desc:'易有預期之外的小開銷，建議做好財務管理，關閉購物 App。',yi:'財務管理、減少不必要支出、記帳',ji:'開啟購物平台、輕信折扣誘惑、借錢給人'},
+  {luck:'平',desc:'容易把心思放在他人身上，多留點時間給自己，靜心為上。',yi:'獨處靜心、自我照顧、整理思緒',ji:'過度關注他人動態、比較心態、情緒內耗'},
+  {luck:'中吉',desc:'競爭即是動力！適合參與商務談判或競標，展現企圖心。',yi:'商務談判、競標出擊、展現企圖心',ji:'輕易妥協、低估自身價值、怯場退縮'},
+  {luck:'平',desc:'投資理財宜保守，聽信小道消息易破財，守成便是賺。',yi:'守成保本、固定儲蓄、穩健理財',ji:'聽信小道消息、投機操作、高風險投資'},
+  {luck:'小凶',desc:'情緒易受外界干擾，避免在心浮氣躁時與伴侶或家人爭執。',yi:'靜心調節情緒、傾訴信任的人、運動紓壓',ji:'與家人爭執、情緒性回應、傳播負能量'},
+  {luck:'平',desc:'適合進行體能消耗較大的運動，藉由流汗宣洩多餘的精力。',yi:'大量運動、體能訓練、戶外活動',ji:'久坐不動、情緒壓抑、過度飲食'}
+],
+'食神':[
+  {luck:'中吉',desc:'靈感源源不絕，適合從事創意發想，想法易獲得他人讚賞。',yi:'創意發想、腦力激盪、展示作品',ji:'過度自我批判、墨守成規、壓抑靈感'},
+  {luck:'大吉',desc:'口福極佳，有機會享用美食或收到貼心小禮物，心情美滋滋。',yi:'美食體驗、接受禮物、分享快樂',ji:'節食過度、拒絕他人好意、獨樂不共享'},
+  {luck:'中吉',desc:'生活步調悠閒，適合放慢腳步，享受閱讀或聽音樂的靜謐時光。',yi:'閱讀靜心、聽音樂放鬆、品味生活',ji:'過度焦慮、催促自己、強迫高效'},
+  {luck:'中吉',desc:'親和力十足，與人相處融洽，適合化解過往的誤會與隔閡。',yi:'修復關係、化解誤會、溫柔溝通',ji:'計較舊帳、態度強硬、挑剔他人'},
+  {luck:'大吉',desc:'財源生生不息，今日求財順遂，亦適合規劃長期的理財方向。',yi:'求財行動、規劃理財、長線布局',ji:'短線投機、坐等財來、浪費機會'},
+  {luck:'中吉',desc:'才華得以展現，在工作或學業上能輕鬆應對，表現游刃有餘。',yi:'展示才華、輕鬆應對工作、享受學習',ji:'過度謙虛、藏鋒斂芒、怯於表達'},
+  {luck:'中吉',desc:'身心舒暢的一天，適合安排 SPA 或親近自然，好好犒賞自己。',yi:'SPA 放鬆、親近自然、自我犒賞',ji:'過度忙碌、忽略身心需求、強撐工作'},
+  {luck:'大吉',desc:'貴人運暗藏，不經意的聊天可能為你帶來全新的商機或轉機。',yi:'主動攀談、參加聚會、把握偶遇',ji:'閉門謝客、拒絕交流、錯失貴人'},
+  {luck:'中吉',desc:'表達能力提升，適合進行公開演講、匯報或與客戶輕鬆對談。',yi:'公開演說、客戶拜訪、匯報提案',ji:'迴避公眾場合、含糊表達、逃避發言'},
+  {luck:'平',desc:'容易沉溺於安逸放鬆，注意時間管理，別因貪玩而耽誤正事。',yi:'適度休閒、時間規劃、享樂有度',ji:'貪圖安逸、拖延要事、耽溺娛樂'}
+],
+'傷官':[
+  {luck:'中吉',desc:'思維敏捷、點子頗多，適合破局創新或解決卡關已久的難題。',yi:'創新思維、突破困局、解決難題',ji:'墨守成規、死板執行、壓抑創意'},
+  {luck:'小凶',desc:'言詞鋒利易傷人，說話前請留三分餘地，防範禍從口出。',yi:'謹言慎行、三思後說、書面溝通',ji:'口無遮攔、當面批評、爭論輸贏'},
+  {luck:'平',desc:'創作能量爆發，但情緒起伏大，宜將精力專注於作品與技術上。',yi:'創作輸出、技術鑽研、情感昇華',ji:'情緒外洩、與人爭執、無謂消耗'},
+  {luck:'小凶',desc:'對現狀易感不滿，與上司溝通需注意態度，切忌意氣用事。',yi:'私下溝通、調整心態、先處理情緒',ji:'頂撞上司、公開抱怨、衝動辭職'},
+  {luck:'中吉',desc:'展現獨特個人魅力，適合行銷個人品牌或進行舞台表演。',yi:'個人品牌行銷、舞台表演、展現獨特性',ji:'自我壓抑、模仿他人、隱藏個性'},
+  {luck:'平',desc:'想法天馬行空，執行時需腳踏實地，防範虎頭蛇尾。',yi:'將創意落地、設定里程碑、分步執行',ji:'空談計畫、半途而廢、好高騖遠'},
+  {luck:'小凶',desc:'容易看周遭人事物不順眼，多看優點，少挑毛病，保持和氣。',yi:'欣賞他人優點、保持和諧氣氛、寬以待人',ji:'挑剔批評、放大缺點、破壞氣氛'},
+  {luck:'中吉',desc:'領悟力極高，學習新技能或鑽研感興趣的領域進步飛快。',yi:'學習新技能、跨領域進修、深度鑽研',ji:'原地踏步、抗拒學習、自以為足'},
+  {luck:'平',desc:'適合打破常規思考，但出行或開車時需專注，注意交通安全。',yi:'創新規劃、步行散心、冷靜駕駛',ji:'分心開車、衝動出行、忽視安全'},
+  {luck:'小凶',desc:'考驗耐性的一天，面對繁瑣事務切勿煩躁，耐住性子便是贏。',yi:'耐心處理細務、深呼吸調節、靜待結果',ji:'急躁行事、半途放棄、遷怒他人'}
+],
+'偏財':[
+  {luck:'大吉',desc:'機遇突現，利於開拓新業務、兼職或經商，財氣較旺。',yi:'開拓業務、洽談合作、把握商機',ji:'守舊不前、錯失時機、過度保守'},
+  {luck:'中吉',desc:'投資直覺準確，有機會獲得意外的小財富或幸運中獎。',yi:'適度投資、把握直覺機會、開源節流',ji:'大額豪賭、完全守財不動、錯失偏財'},
+  {luck:'中吉',desc:'商業嗅覺敏銳，適合洽談合作或出差考察，易發現潛在商機。',yi:'出差考察、洽談合作、發掘商機',ji:'閉門造車、拒絕出行、忽視市場訊號'},
+  {luck:'大吉',desc:'偏財運旺盛，適合主動洽談業務或開發客戶，成交機率高。',yi:'主動開發客戶、業務洽談、積極出擊',ji:'等待上門、消極應對、放棄開拓'},
+  {luck:'平',desc:'有進財機會，但同時也容易大手大腳花費，需注意開支平衡。',yi:'掌握進財時機、記錄開支、收支平衡',ji:'大手大腳花費、衝動消費、忽視支出'},
+  {luck:'中吉',desc:'社交圈傳來好消息，可能帶動意外的賺錢管道，宜多加留意。',yi:'留意社交訊息、把握意外機會、廣結善緣',ji:'閉塞消息來源、忽視人脈、獨來獨往'},
+  {luck:'大吉',desc:'運勢強勁，適合大膽嘗試新思維或新市場，行動能帶來財富。',yi:'嘗試新市場、大膽行動、創新思維',ji:'因循守舊、害怕失敗、瞻前顧後'},
+  {luck:'平',desc:'財來財去之兆，雖然有快錢入帳，但也要小心高風險投資。',yi:'快速交易、靈活周轉、短線操作',ji:'高風險投資、全押注、輕易借貸'},
+  {luck:'中吉',desc:'異性緣與交際運佳，出外易得他人關照，人際互動愉快。',yi:'社交出行、增進異性緣、廣結人脈',ji:'宅居不出、社交冷漠、拒絕邀約'},
+  {luck:'大吉',desc:'適合處理資金調度或回收款項，過程順暢，結果令人滿意。',yi:'回收款項、資金調度、財務結算',ji:'拖延收款、資金閒置、忽視財務'}
+],
+'正財':[
+  {luck:'大吉',desc:'財運穩定，求財得財，利於落實既定計畫，腳踏實地必有收穫。',yi:'落實計畫、腳踏實地、穩健理財',ji:'衝動決策、投機冒險、鋪張浪費'},
+  {luck:'中吉',desc:'工作付出與回報成正比，多一分耕耘便能看見多一分收穫。',yi:'勤奮工作、持續耕耘、按時交付',ji:'偷懶怠工、坐享其成、虎頭蛇尾'},
+  {luck:'中吉',desc:'適合進行常規理財、記帳或審視資產，財務狀況健康穩健。',yi:'記帳理財、審視資產、財務整理',ji:'財務混亂、忽視帳目、衝動支出'},
+  {luck:'大吉',desc:'職場表現受到認可，有機會談及加薪、升職或拿取穩定獎金。',yi:'主動爭取加薪、匯報成果、展現績效',ji:'怯於開口、低估自身價值、放棄爭取'},
+  {luck:'中吉',desc:'今日辦事效率高，日常工作推進順利，生活井然有序。',yi:'高效處理事務、規律行程、整理環境',ji:'拖延怠惰、計畫混亂、無效忙碌'},
+  {luck:'平',desc:'一分錢一分貨，今日適合踏實工作，遠離投機心態方能保平安。',yi:'踏實工作、守正不阿、本業為重',ji:'投機取巧、走偏鋒、旁門左道'},
+  {luck:'大吉',desc:'簽約、洽談大宗固定業務的黃金時機，進展踏實且令人安心。',yi:'簽約洽談、確立合作、長期合約',ji:'打退堂鼓、拖延簽約、半途毀約'},
+  {luck:'中吉',desc:'精打細算的一天，能用最划算的價格買到心儀且實用的日用品。',yi:'精明消費、比價採購、合理支出',ji:'衝動購物、不比價、浪費資源'},
+  {luck:'中吉',desc:'誠信待人為你贏得長期信任，商譽提升，回頭客機率大增。',yi:'誠信經營、維繫客戶、口碑行銷',ji:'欺騙矇混、言而無信、忽視口碑'},
+  {luck:'平',desc:'財運四平八穩，適合儲蓄與固守本業，不宜輕易更換穩定跑道。',yi:'儲蓄理財、固守本業、穩定發展',ji:'輕易換跑道、冒進轉行、放棄穩定'}
+],
+'七殺':[
+  {luck:'小凶',desc:'壓力驟增，需防小人干擾或情緒波動，今日宜靜不宜動。',yi:'獨處靜心、規劃防禦、保持低調',ji:'正面衝突、輕舉妄動、公開批評他人'},
+  {luck:'中吉',desc:'魄力十足，適合挑戰高難度任務，有機會一戰成名、展現權威。',yi:'挑戰高難度任務、展現魄力、一鳴驚人',ji:'退縮不前、自我設限、畏首畏尾'},
+  {luck:'小凶',desc:'職場上恐面臨突發狀況或嚴苛要求，保持冷靜，見招拆招。',yi:'冷靜應對、靈活調整、危機處理',ji:'情緒崩潰、與人硬拼、衝動行事'},
+  {luck:'平',desc:'行動意願強烈，但需注意作息，避免過度勞累傷了身體。',yi:'適度運動、注意作息、均衡飲食',ji:'過度勞累、熬夜拼搏、忽視身體警訊'},
+  {luck:'小凶',desc:'容易遇到態度強硬的人，溝通宜以柔克剛，切勿硬碰硬。',yi:'以柔克剛、迂迴溝通、退一步思考',ji:'硬碰硬、正面槓上、情緒對抗'},
+  {luck:'中吉',desc:'決斷力極佳，適合斬斷亂麻，處理棘手或拖延已久的事情。',yi:'斬斷亂麻、處理棘手事、快刀利落',ji:'優柔寡斷、拖延不決、瞻前顧後'},
+  {luck:'小凶',desc:'身心感到緊繃，容易焦慮，建議適度拉伸或冥想以緩解壓力。',yi:'冥想放鬆、伸展拉筋、深呼吸調節',ji:'壓抑情緒、強撐硬撐、忽視身心警訊'},
+  {luck:'平',desc:'危機即是轉機，雖然面臨考驗，但只要沉著應對便能化險為夷。',yi:'沉著應對、靈活轉化、把握逆轉機會',ji:'自亂陣腳、慌亂行事、放棄抵抗'},
+  {luck:'小凶',desc:'宜防範意外小碰撞，出門在外多留心周遭環境，安全第一。',yi:'謹慎出行、注意環境安全、減少冒險',ji:'粗心大意、冒險行事、忽視安全警示'},
+  {luck:'中吉',desc:'領導力爆發，危急時刻能挺身而出引領大局，令人刮目相看。',yi:'挺身而出、引領局面、展現領導力',ji:'躲避責任、袖手旁觀、錯失關鍵時機'}
+],
+'正官':[
+  {luck:'中吉',desc:'貴人運佳，工作易得賞識，條理分明，利於開展業務。',yi:'拜訪上司、匯報進度、開展業務',ji:'違規行事、拖延責任、情緒化回應'},
+  {luck:'中吉',desc:'名譽與聲望提升，適合主持會議、面試或與官方機構對接。',yi:'主持會議、面試應聘、官方對接',ji:'言行不一、破壞名譽、出爾反爾'},
+  {luck:'平',desc:'規章制度條理分明，依循標準流程辦事最為順遂，切忌投機取巧。',yi:'依規辦事、標準流程、公正處理',ji:'投機取巧、繞過制度、鑽漏洞'},
+  {luck:'中吉',desc:'長輩或主管對你信賴有加，適合主動匯報進度或尋求指導。',yi:'主動匯報、尋求指導、建立信任',ji:'隱瞞問題、自作主張、拒絕建議'},
+  {luck:'中吉',desc:'職場人際關係融洽，辦事公道得人心，團隊協作順暢無阻。',yi:'公平處事、促進團隊合作、建立制度',ji:'偏袒私心、破壞規則、製造矛盾'},
+  {luck:'平',desc:'責任感加重，雖然有些勞碌，但付出的努力都會累積成資本。',yi:'承擔責任、認真履職、積累資歷',ji:'推卸責任、消極應付、抱怨工作'},
+  {luck:'中吉',desc:'適合簽署正式文件、合約，或進行法律相關的事務處理。',yi:'簽署合約、法律事務、正式文件',ji:'口頭協議、忽視法律程序、草率行事'},
+  {luck:'平',desc:'宜保持言行端正，在公眾場合展現專業形象，能吸引好運。',yi:'言行端正、展現專業形象、公眾表達',ji:'行為失當、公眾失態、言行不一'},
+  {luck:'中吉',desc:'考試、考核運佳，思維邏輯清晰，能交出令人滿意的答卷。',yi:'應試考核、邏輯思維、清晰表達',ji:'準備不足、臨陣退縮、粗心大意'},
+  {luck:'平',desc:'生活作息規律，適合調整不良習慣，建立高效率的每日例行公事。',yi:'調整作息、建立例行公事、戒除陋習',ji:'作息混亂、拖延改變、自我放縱'}
+],
+'偏印':[
+  {luck:'中吉',desc:'領悟力高，利於鑽研玄學、哲學、心理學，思慮宜開闊。',yi:'研究玄學哲理、深度閱讀、靜心思考',ji:'人際交際、表面社交、輕率承諾'},
+  {luck:'平',desc:'直覺敏銳，常有獨特見解，但需防範鑽牛角尖或流於空想。',yi:'善用直覺、獨立思考、洞察本質',ji:'鑽牛角尖、過度空想、脫離現實'},
+  {luck:'中吉',desc:'適合獨自進行深度思考或技術研發，靈性與藝術天賦易被啟發。',yi:'深度思考、技術研發、藝術創作',ji:'強迫社交、嘈雜環境、打亂節奏'},
+  {luck:'平',desc:'容易與他人產生疏離感，享受孤獨的同時，也別忘了關心身邊人。',yi:'享受孤獨、自我充電、適度聯繫親友',ji:'完全斷絕往來、過度自閉、忽視人際'},
+  {luck:'平',desc:'思想獨特，但今天需防範因心思敏感而誤解旁人的好意。',yi:'包容接納、溝通確認、保持開放',ji:'自我設限、多疑猜忌、曲解他人'},
+  {luck:'中吉',desc:'容易看穿事物本質，適合進行風險評估或市場調查，洞察力驚人。',yi:'風險評估、市場調查、洞察分析',ji:'輕信表面、忽視細節、倉促決策'},
+  {luck:'平',desc:'容易感到倦怠，不宜做重大商業決定，給自己一杯咖啡的時間放空。',yi:'適度放空、補充能量、暫緩決策',ji:'重大決策、大額消費、強迫自己'},
+  {luck:'中吉',desc:'對冷門知識或小眾技術學習成效極佳，適合進修為自我加值。',yi:'冷門技術進修、自我加值、深耕專業',ji:'隨波逐流、追求熱門、放棄專注'},
+  {luck:'平',desc:'心思細膩但也容易悲觀，多接觸正能量的朋友，別悶著自己。',yi:'接觸正能量、傾訴信任的人、轉換環境',ji:'獨自內耗、悲觀消極、逃避現實'},
+  {luck:'中吉',desc:'適合進行幕後規劃、策略擬定，避開台前鋒芒，默默發力。',yi:'幕後規劃、策略擬定、低調布局',ji:'搶鋒頭、過早曝光、打亂部署'}
+],
+'正印':[
+  {luck:'中吉',desc:'內心安穩，易得長輩幫助，利於學習與合約文書。',yi:'簽約合作、學習進修、請求長輩協助',ji:'獨斷行事、忽視建議、推卸責任'},
+  {luck:'大吉',desc:'貴人運旺盛，遇到困難只要主動開口，多能獲得有力的長輩相助。',yi:'主動求助、善用貴人資源、感恩回饋',ji:'閉口不言、固執獨行、拒絕他人好意'},
+  {luck:'中吉',desc:'身心感到無比踏實，包容力強，適合修復人際關係或陪伴家人。',yi:'陪伴家人、修復關係、包容他人',ji:'斤斤計較、舊事重提、情緒化'},
+  {luck:'中吉',desc:'學習吸收能力極佳，適合報名課程、閱讀專業書籍或考取證照。',yi:'報名課程、閱讀進修、考取證照',ji:'原地踏步、拒絕學習、浪費時間'},
+  {luck:'大吉',desc:'利於處理房屋、土地、合約或經辦各類行政審批，流程順遂。',yi:'房屋土地事務、行政審批、合約處理',ji:'拖延辦理、文件草率、忽視細節'},
+  {luck:'中吉',desc:'自帶福氣，周遭磁場祥和，適合調整心態，凡事常懷感恩之心。',yi:'感恩心態、正向思考、傳遞善意',ji:'抱怨環境、怨天尤人、負能量傳播'},
+  {luck:'平',desc:'容易產生依賴心理，長輩雖疼愛，但自身該承擔的責任仍需努力。',yi:'承擔應有責任、自立自強、感恩學習',ji:'過度依賴、推卸責任、坐等他人解決'},
+  {luck:'大吉',desc:'名聲與信用度極佳，你的承諾能獲得他人百分百的信任。',yi:'建立信用、兌現承諾、口碑積累',ji:'言而無信、輕諾寡信、損害名聲'},
+  {luck:'中吉',desc:'適合進行內省、冥想或心理諮詢，能有效修復心靈能量。',yi:'內省冥想、心理諮詢、靈性修復',ji:'逃避自我、麻木應付、壓抑情緒'},
+  {luck:'平',desc:'運勢平穩安泰，不求有功但求無過，安穩過好每一天就是福氣。',yi:'平穩作息、知足常樂、守正不阿',ji:'躁進求功、貪多嚼不爛、破壞穩定'}
+]
+};
+function getRandomFortune(tenGod) {
+    var pool = FORTUNE_POOL[tenGod];
+    if (!pool) return {luck:'平', desc:'今日平穩，謹慎行事。', yi:'—', ji:'—'};
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function getWuxingClass(s) {
+    if ('甲乙'.indexOf(s)>=0) return 'color-wood';
+    if ('丙丁'.indexOf(s)>=0) return 'color-fire';
+    if ('戊己'.indexOf(s)>=0) return 'color-earth';
+    if ('庚辛'.indexOf(s)>=0) return 'color-metal';
+    if ('壬癸'.indexOf(s)>=0) return 'color-water';
+    return '';
+}
+function getWuxingName(s) {
+    if ('甲乙'.indexOf(s)>=0) return '木';
+    if ('丙丁'.indexOf(s)>=0) return '火';
+    if ('戊己'.indexOf(s)>=0) return '土';
+    if ('庚辛'.indexOf(s)>=0) return '金';
+    return '水';
+}
+function getTenGod(dayStem, targetStem) {
+    var me=STEM_DATA[dayStem]; var target=STEM_DATA[targetStem];
+    if (!me||!target) return '';
+    var group=RELATIONS[me.wuxing][target.wuxing]; var same=(me.yang===target.yang);
+    if (group==='比劫') return same?'比肩':'劫財';
+    if (group==='食傷') return same?'食神':'傷官';
+    if (group==='財星') return same?'偏財':'正財';
+    if (group==='官殺') return same?'七殺':'正官';
+    if (group==='印星') return same?'偏印':'正印';
+    return '';
+}
+function calculateFortune(tg, flowStem) {
+    var me=STEM_DATA[tg]; var day=STEM_DATA[flowStem];
+    var group=RELATIONS[me.wuxing][day.wuxing]; var same=(me.yang===day.yang);
+    var tenGod='';
+    if(group==='比劫') tenGod=same?'比肩':'劫財';
+    else if(group==='食傷') tenGod=same?'食神':'傷官';
+    else if(group==='財星') tenGod=same?'偏財':'正財';
+    else if(group==='官殺') tenGod=same?'七殺':'正官';
+    else if(group==='印星') tenGod=same?'偏印':'正印';
+    var r = getRandomFortune(tenGod);
+    return {tenGod:tenGod, luckLevel:r.luck, desc:r.desc, yi:r.yi, ji:r.ji};
+}
+function renderColorAdvice(flowStem) {
+    var wx=STEM_DATA[flowStem].wuxing; var info=COLOR_MAP[wx];
+    var goodHTML=info.good.map(function(c){return '<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;"><span class="swatch" style="background:'+c.hex+';"></span>'+c.name+'</span>';}).join('');
+    var avoidHTML=info.avoid.map(function(c){return '<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;"><span class="swatch" style="background:'+c.hex+';"></span>'+c.name+'</span>';}).join('');
+    document.getElementById('colorAdvice').innerHTML=
+        '<p style="margin-bottom:8px;font-weight:300;line-height:1.7;">'+info.desc+'</p>'+
+        '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 0;margin-bottom:6px;"><span style="font-size:10px;color:#9CA3AF;margin-right:6px;flex-shrink:0;">宜穿</span>'+goodHTML+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 0;"><span style="font-size:10px;color:#9CA3AF;margin-right:6px;flex-shrink:0;">避免</span>'+avoidHTML+'</div>';
+}
+function renderSingleFortune(dayStem, flowStem) {
+    var res=calculateFortune(dayStem, flowStem);
+    // yi/ji 已包含在 res 中
+    var lvlStyle='color:#888;';
+    if(res.luckLevel==='大吉') lvlStyle='color:#A65B54;font-weight:bold;';
+    if(res.luckLevel==='中吉') lvlStyle='color:#789262;font-weight:bold;';
+    if(res.luckLevel==='小凶') lvlStyle='color:#5B6E80;';
+    document.getElementById('fortuneSectionLabel').innerText=dayStem+getWuxingName(dayStem)+'・'+res.tenGod;
+    document.getElementById('fortuneDetail').innerHTML=
+        '<div class="flex items-center gap-2 mb-3">'+
+            '<div class="font-serif text-2xl font-bold '+getWuxingClass(dayStem)+'">'+dayStem+'</div>'+
+            '<div>'+
+                '<div class="text-[10px] text-gray-400">'+getWuxingName(dayStem)+'・'+(STEM_DATA[dayStem].yang?'陽':'陰')+'</div>'+
+                '<div class="font-serif text-xs" style="'+lvlStyle+'">['+res.luckLevel+'] '+res.tenGod+'</div>'+
+            '</div>'+
+        '</div>'+
+        '<p class="text-[11px] text-gray-600 font-light leading-relaxed mb-3 pb-3" style="border-bottom:0.5px solid #E0DCD3;">'+res.desc+'</p>'+
+        '<div class="mb-2"><div class="flex items-start gap-2">'+
+            '<span class="text-[10px] font-serif shrink-0 mt-0.5 px-1.5 py-0.5 rounded-sm" style="background:#EEF5EE;color:#6B7A6A;">宜</span>'+
+            '<span class="text-[11px] text-gray-600 font-light leading-relaxed">'+res.yi+'</span>'+
+        '</div></div>'+
+        '<div><div class="flex items-start gap-2">'+
+            '<span class="text-[10px] font-serif shrink-0 mt-0.5 px-1.5 py-0.5 rounded-sm" style="background:#F5EDEC;color:#A65B54;">忌</span>'+
+            '<span class="text-[11px] text-gray-600 font-light leading-relaxed">'+res.ji+'</span>'+
+        '</div></div>';
+    document.getElementById('fortuneSection').classList.remove('hidden');
+}
+function initSelects() {
+    var yearSel=document.getElementById('birthYear');
+    for(var y=2030;y>=1930;y--){var opt=document.createElement('option');opt.value=y;opt.textContent=y+'年';if(y===1990)opt.selected=true;yearSel.appendChild(opt);}
+    var monthSel=document.getElementById('birthMonth');
+    var mn=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+    for(var m=1;m<=12;m++){var opt=document.createElement('option');opt.value=m;opt.textContent=mn[m-1];monthSel.appendChild(opt);}
+    var daySel=document.getElementById('birthDay');
+    for(var d=1;d<=31;d++){var opt=document.createElement('option');opt.value=d;opt.textContent=d+'日';daySel.appendChild(opt);}
+}
+var flowStemGlobal='';
+function calcBaZi() {
+    var y=parseInt(document.getElementById('birthYear').value);
+    var m=parseInt(document.getElementById('birthMonth').value);
+    var d=parseInt(document.getElementById('birthDay').value);
+    var h=parseInt(document.getElementById('birthHour').value);
+    try {
+        var solar=Solar.fromYmdHms(y,m,d,h,0,0);
+        var lunar=solar.getLunar();
+        var ec=lunar.getEightChar();
+        var pillars=[ec.getYear(),ec.getMonth(),ec.getDay(),ec.getTime()];
+        var dayStem=pillars[2][0];
+        var grid=document.getElementById('pillarsGrid');
+        grid.innerHTML='';
+        pillars.forEach(function(p,i){
+            var stem=p[0];var branch=p[1];
+            var wx=STEM_DATA[stem]?STEM_DATA[stem].wuxing:'土';
+            var bg=WUXING_BG[wx]||'#FAFAF9';
+            var isDay=(i===2);
+            var tenGodHTML=isDay
+                ?'<div class="text-[9px] text-[#A65B54] font-serif mt-1">日主</div>'
+                :'<div class="text-[9px] font-serif px-1 py-px rounded-sm mt-1" style="background:#F0EFED;color:#888;">'+getTenGod(dayStem,stem)+'</div>';
+            var mhk=BRANCH_TYPE[branch]||'';
+            var mhkClass=BRANCH_TYPE_CLASS[mhk]||'';
+            var mhkHTML=mhk
+                ?'<div class="text-[9px] font-serif px-1 py-px rounded-sm mt-0.5 '+mhkClass+'">'+mhk+'</div>'
+                :'<div class="text-[9px] mt-0.5" style="visibility:hidden;">佔</div>';
+            var card=document.createElement('div');
+            card.className='pillar-card p-2 text-center flex-1';
+            card.style.backgroundColor=bg;
+            card.innerHTML='<div class="text-[9px] text-gray-400 mb-1">'+PILLAR_LABELS[i]+'</div>'+
+                tenGodHTML+
+                '<div class="font-serif text-lg font-bold leading-snug mt-0.5">'+
+                '<span class="'+getWuxingClass(stem)+' block">'+stem+'</span>'+
+                '<span class="'+getWuxingClass(branch)+' block">'+branch+'</span></div>'+
+                mhkHTML;
+            grid.appendChild(card);
+        });
+        var dayWx=STEM_DATA[dayStem]?STEM_DATA[dayStem].wuxing:'';
+        document.getElementById('dayMasterBox').innerHTML=
+            '<div class="text-[10px] text-gray-400 mb-1">日主</div>'+
+            '<div class="font-serif text-2xl font-bold '+getWuxingClass(dayStem)+'">'+dayStem+'</div>'+
+            '<div class="text-[11px] text-gray-500 mt-1">'+dayWx+'・'+(STEM_DATA[dayStem].yang?'陽':'陰')+'</div>'+
+            '<div class="text-[10px] text-gray-400 mt-2 font-light leading-relaxed">今日運勢詳見下方解析。</div>';
+        document.getElementById('baziResult').classList.remove('hidden');
+        renderSingleFortune(dayStem, flowStemGlobal);
+        setTimeout(function(){document.getElementById('fortuneSection').scrollIntoView({behavior:'smooth',block:'start'});},100);
+    } catch(e){alert('排盤失敗，請確認出生日期是否正確。');console.error(e);}
+}
+window.onload=function(){
+    initSelects();
+    var today=new Date();
+    var y=today.getFullYear();var m=today.getMonth()+1;var d=today.getDate();
+    document.getElementById('currentDateText').innerText='公曆 '+y+'年'+m+'月'+d+'日';
+    try{
+        var solar=Solar.fromYmdHms(y,m,d,12,0,0);
+        var lunar=solar.getLunar();
+        var flowDay=lunar.getEightChar().getDay();
+        var flowStem=flowDay[0];var flowBranch=flowDay[1];
+        flowStemGlobal=flowStem;
+        document.getElementById('lunarDateText').innerText='舊曆 '+lunar.getYearInGanZhi()+'年 '+lunar.getMonthInChinese()+'月'+lunar.getDayInChinese();
+        document.getElementById('flowDayPillar').innerHTML='<span class="'+getWuxingClass(flowStem)+'">'+flowStem+'</span><span class="'+getWuxingClass(flowBranch)+'">'+flowBranch+'</span>';
+        document.getElementById('jieQiText').innerText='目前處於「'+lunar.getPrevJieQi(true).getName()+'」節氣管轄範圍';
+        renderColorAdvice(flowStem);
+    }catch(e){document.getElementById('lunarDateText').innerText='農曆資料載入失敗，請重新整理。';console.error(e);}
+};
+</script>
+
+<script>
+(function(){
+    function generateIcon() {
+        var size = 512;
+        var c = document.createElement('canvas');
+        c.width = size; c.height = size;
+        var ctx = c.getContext('2d');
+
+        // 背景漸層
+        var bgGrad = ctx.createRadialGradient(256,200,0, 256,256,320);
+        bgGrad.addColorStop(0, '#2A2318');
+        bgGrad.addColorStop(1, '#0E0C09');
+        ctx.fillStyle = bgGrad;
+        roundRect(ctx, 0, 0, size, size, 112);
+        ctx.fill();
+
+        // 光暈
+        var glowGrad = ctx.createRadialGradient(256,256,0, 256,256,200);
+        glowGrad.addColorStop(0, 'rgba(197,168,74,0.22)');
+        glowGrad.addColorStop(1, 'rgba(197,168,74,0)');
+        ctx.fillStyle = glowGrad;
+        ctx.fillRect(0, 0, size, size);
+
+        // GUANG YAO
+        ctx.font = '400 24px Georgia, serif';
+        ctx.fillStyle = 'rgba(197,168,74,0.75)';
+        ctx.letterSpacing = '8px';
+        ctx.textAlign = 'center';
+        ctx.fillText('GUANG YAO', 256, 158);
+
+        // 上分隔線
+        ctx.strokeStyle = 'rgba(197,168,74,0.4)';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(150,174); ctx.lineTo(362,174); ctx.stroke();
+
+        // 光耀 大字
+        ctx.font = '700 136px "Noto Serif TC", "PingFang TC", "Heiti TC", STSong, serif';
+        ctx.fillStyle = '#E8D5A0';
+        ctx.letterSpacing = '6px';
+        ctx.textAlign = 'center';
+        ctx.fillText('光耀', 256, 305);
+
+        // 下分隔線
+        ctx.beginPath(); ctx.moveTo(150,325); ctx.lineTo(362,325); ctx.stroke();
+
+        // 每日運勢
+        ctx.font = '400 28px "Noto Serif TC", "PingFang TC", "Heiti TC", STSong, serif';
+        ctx.fillStyle = 'rgba(197,168,74,0.75)';
+        ctx.letterSpacing = '5px';
+        ctx.textAlign = 'center';
+        ctx.fillText('每日運勢', 256, 368);
+
+        var png = c.toDataURL('image/png');
+        document.getElementById('apple-touch-icon').href = png;
+        document.getElementById('favicon').href = png;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x+r, y);
+        ctx.lineTo(x+w-r, y);
+        ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+        ctx.lineTo(x+w, y+h-r);
+        ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+        ctx.lineTo(x+r, y+h);
+        ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+        ctx.lineTo(x, y+r);
+        ctx.quadraticCurveTo(x, y, x+r, y);
+        ctx.closePath();
+    }
+
+    // 等字體載入後再畫
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(generateIcon);
+    } else {
+        window.addEventListener('load', generateIcon);
+    }
+})();
+</script>
+</body>
+</html>
