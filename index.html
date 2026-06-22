@@ -358,7 +358,7 @@ function initSelects() {
     for(var d=1;d<=31;d++){var opt=document.createElement('option');opt.value=d;opt.textContent=d+'日';daySel.appendChild(opt);}
 }
 var flowStemGlobal='';
-function calcBaZi() {
+function calcBaZi(skipSave) {
     var y=parseInt(document.getElementById('birthYear').value);
     var m=parseInt(document.getElementById('birthMonth').value);
     var d=parseInt(document.getElementById('birthDay').value);
@@ -403,7 +403,14 @@ function calcBaZi() {
             '<div class="text-[10px] text-gray-400 mt-2 font-light leading-relaxed">今日運勢詳見下方解析。</div>';
         document.getElementById('baziResult').classList.remove('hidden');
         renderSingleFortune(dayStem, flowStemGlobal);
-        setTimeout(function(){document.getElementById('fortuneSection').scrollIntoView({behavior:'smooth',block:'start'});},100);
+
+        // 儲存本次排盤資料，下次開啟自動帶入
+        if (!skipSave) {
+            try {
+                localStorage.setItem('guangyao_bazi', JSON.stringify({y:y,m:m,d:d,h:h}));
+            } catch(e) { console.warn('無法儲存命盤資料', e); }
+            setTimeout(function(){document.getElementById('fortuneSection').scrollIntoView({behavior:'smooth',block:'start'});},100);
+        }
     } catch(e){alert('排盤失敗，請確認出生日期是否正確。');console.error(e);}
 }
 window.onload=function(){
@@ -422,6 +429,19 @@ window.onload=function(){
         document.getElementById('jieQiText').innerText='目前處於「'+lunar.getPrevJieQi(true).getName()+'」節氣管轄範圍';
         renderColorAdvice(flowStem);
     }catch(e){document.getElementById('lunarDateText').innerText='農曆資料載入失敗，請重新整理。';console.error(e);}
+
+    // 讀取上次排盤資料，自動帶入並顯示結果
+    try {
+        var saved = localStorage.getItem('guangyao_bazi');
+        if (saved) {
+            var data = JSON.parse(saved);
+            document.getElementById('birthYear').value = data.y;
+            document.getElementById('birthMonth').value = data.m;
+            document.getElementById('birthDay').value = data.d;
+            document.getElementById('birthHour').value = data.h;
+            calcBaZi(true); // true = 不重複寫入、不自動捲動
+        }
+    } catch(e) { console.warn('無法讀取上次命盤資料', e); }
 };
 </script>
 
