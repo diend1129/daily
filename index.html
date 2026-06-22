@@ -23,10 +23,15 @@
         .color-earth { color: #B0A18E; }
         .color-metal { color: #C5B276; }
         .color-water { color: #5B6E80; }
-        .border-thin { border: 0.5px solid #E0DCD3; }
-        select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
-        .pillar-card { border: 0.5px solid #E0DCD3; border-radius: 2px; }
-        .btn-calc { background-color: #333; color: #fff; border: none; border-radius: 2px; cursor: pointer; }
+        .border-thin { border: 0.5px solid #E0DCD3; border-radius: 10px; }
+        select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; border-radius: 8px; }
+        input[type="text"] { border-radius: 8px; }
+        .pillar-card { border: 0.5px solid #E0DCD3; border-radius: 10px; }
+        .btn-calc { background-color: #333; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+        .day-master-box { border: 2px solid #C9A24A; border-radius: 12px; }
+        .history-chip { border: 0.5px solid #E0DCD3; border-radius: 999px; cursor: pointer; transition: background 0.15s; }
+        .history-chip:hover { background-color: #F0EEEA; }
+        .history-chip-active { border-color: #C9A24A; background-color: #FBF6E9; }
         .swatch { width: 16px; height: 16px; border-radius: 50%; display: inline-block; vertical-align: middle; border: 0.5px solid #ddd; flex-shrink: 0; }
         .tag-ma  { background:#EEF1ED; color:#6B7A6A; }
         .tag-hua { background:#F9EEF0; color:#A65B54; }
@@ -61,22 +66,27 @@
             <span>八字排盤</span>
             <span class="text-[10px] font-sans text-gray-400 font-normal">輸入出生資料</span>
         </div>
+        <div class="mb-2">
+            <label class="text-[10px] text-gray-400 block mb-1">姓名 / 稱呼（選填）</label>
+            <input id="birthName" type="text" placeholder="例：小明" maxlength="10"
+                class="w-full border-thin px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none">
+        </div>
         <div class="grid grid-cols-2 gap-2 mb-2">
             <div>
                 <label class="text-[10px] text-gray-400 block mb-1">出生年</label>
-                <select id="birthYear" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
+                <select id="birthYear" class="w-full border-thin px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
             </div>
             <div>
                 <label class="text-[10px] text-gray-400 block mb-1">出生月</label>
-                <select id="birthMonth" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
+                <select id="birthMonth" class="w-full border-thin px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
             </div>
             <div>
                 <label class="text-[10px] text-gray-400 block mb-1">出生日</label>
-                <select id="birthDay" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
+                <select id="birthDay" class="w-full border-thin px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6"></select>
             </div>
             <div>
                 <label class="text-[10px] text-gray-400 block mb-1">出生時辰</label>
-                <select id="birthHour" class="w-full border-thin rounded-sm px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6">
+                <select id="birthHour" class="w-full border-thin px-2 py-1.5 text-xs bg-[#FAFAF9] focus:outline-none pr-6">
                     <option value="23">子時 23–01時</option>
                     <option value="1">丑時 01–03時</option>
                     <option value="3">寅時 03–05時</option>
@@ -93,9 +103,16 @@
             </div>
         </div>
         <button onclick="calcBaZi()" class="btn-calc w-full py-2 text-xs tracking-widest font-serif mt-1">排 盤</button>
+
+        <!-- 歷史命盤 -->
+        <div id="historySection" class="mt-3 hidden">
+            <div class="text-[10px] text-gray-400 mb-1.5">歷史命盤（最多 2 筆，點選名字切換）</div>
+            <div id="historyChips" class="flex flex-wrap gap-2"></div>
+        </div>
+
         <div id="baziResult" class="mt-4 hidden">
             <div class="flex flex-row-reverse gap-1.5 mb-3" id="pillarsGrid"></div>
-            <div class="border-thin rounded-sm p-3 text-center bg-[#FAFAF9]" id="dayMasterBox"></div>
+            <div class="day-master-box p-3 text-center bg-[#FAFAF9]" id="dayMasterBox"></div>
         </div>
     </section>
 
@@ -363,6 +380,7 @@ function calcBaZi(skipSave) {
     var m=parseInt(document.getElementById('birthMonth').value);
     var d=parseInt(document.getElementById('birthDay').value);
     var h=parseInt(document.getElementById('birthHour').value);
+    var name=document.getElementById('birthName').value.trim();
     try {
         var solar=Solar.fromYmdHms(y,m,d,h,0,0);
         var lunar=solar.getLunar();
@@ -397,6 +415,7 @@ function calcBaZi(skipSave) {
         });
         var dayWx=STEM_DATA[dayStem]?STEM_DATA[dayStem].wuxing:'';
         document.getElementById('dayMasterBox').innerHTML=
+            (name ? '<div class="text-[11px] text-[#A65B54] font-serif mb-1">'+name+'</div>' : '')+
             '<div class="text-[10px] text-gray-400 mb-1">日主</div>'+
             '<div class="font-serif text-2xl font-bold '+getWuxingClass(dayStem)+'">'+dayStem+'</div>'+
             '<div class="text-[11px] text-gray-500 mt-1">'+dayWx+'・'+(STEM_DATA[dayStem].yang?'陽':'陰')+'</div>'+
@@ -404,14 +423,85 @@ function calcBaZi(skipSave) {
         document.getElementById('baziResult').classList.remove('hidden');
         renderSingleFortune(dayStem, flowStemGlobal);
 
-        // 儲存本次排盤資料，下次開啟自動帶入
+        // 儲存本次排盤資料到歷史命盤（最多 2 筆）
         if (!skipSave) {
-            try {
-                localStorage.setItem('guangyao_bazi', JSON.stringify({y:y,m:m,d:d,h:h}));
-            } catch(e) { console.warn('無法儲存命盤資料', e); }
+            saveToHistory({y:y, m:m, d:d, h:h, name:name});
             setTimeout(function(){document.getElementById('fortuneSection').scrollIntoView({behavior:'smooth',block:'start'});},100);
         }
+        renderHistoryChips();
     } catch(e){alert('排盤失敗，請確認出生日期是否正確。');console.error(e);}
+}
+
+// ── 歷史命盤管理（最多 2 筆，新進覆蓋最舊）──
+function getHistory() {
+    try {
+        var raw = localStorage.getItem('guangyao_history');
+        return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+}
+function setHistory(list) {
+    try { localStorage.setItem('guangyao_history', JSON.stringify(list)); } catch(e) {}
+}
+function saveToHistory(entry) {
+    var list = getHistory();
+    var key = entry.y+'-'+entry.m+'-'+entry.d+'-'+entry.h;
+    var existingIndex = -1;
+    for (var i=0; i<list.length; i++) {
+        if ((list[i].y+'-'+list[i].m+'-'+list[i].d+'-'+list[i].h) === key) { existingIndex = i; break; }
+    }
+    if (existingIndex >= 0) {
+        // 已存在同一筆生日資料，只更新名字
+        list[existingIndex] = entry;
+        setHistory(list);
+        localStorage.setItem('guangyao_bazi', JSON.stringify(entry));
+        return true;
+    }
+    if (list.length >= 2) {
+        alert('歷史命盤已存滿 2 筆，請先刪除一筆再新增。');
+        return false;
+    }
+    list.push(entry);
+    setHistory(list);
+    localStorage.setItem('guangyao_bazi', JSON.stringify(entry));
+    return true;
+}
+function removeHistory(index, evt) {
+    if (evt) evt.stopPropagation();
+    var list = getHistory();
+    list.splice(index, 1);
+    setHistory(list);
+    renderHistoryChips();
+}
+function loadHistory(index) {
+    var list = getHistory();
+    var entry = list[index];
+    if (!entry) return;
+    document.getElementById('birthYear').value = entry.y;
+    document.getElementById('birthMonth').value = entry.m;
+    document.getElementById('birthDay').value = entry.d;
+    document.getElementById('birthHour').value = entry.h;
+    document.getElementById('birthName').value = entry.name || '';
+    calcBaZi(true);
+    renderHistoryChips(index);
+}
+function renderHistoryChips(activeIndex) {
+    var list = getHistory();
+    var section = document.getElementById('historySection');
+    var container = document.getElementById('historyChips');
+    if (!list.length) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    container.innerHTML = '';
+    list.forEach(function(item, i) {
+        var label = item.name ? item.name : (item.y+'年生');
+        var chip = document.createElement('div');
+        chip.className = 'history-chip px-3 py-1.5 text-[11px] font-serif flex items-center gap-1.5' + (i===activeIndex ? ' history-chip-active' : '');
+        chip.innerHTML = '<span>'+label+'</span><span style="color:#bbb;font-size:13px;line-height:1;" onclick="removeHistory('+i+',event)">×</span>';
+        chip.addEventListener('click', function(e){
+            if (e.target.tagName === 'SPAN' && e.target.textContent === '×') return;
+            loadHistory(i);
+        });
+        container.appendChild(chip);
+    });
 }
 window.onload=function(){
     initSelects();
@@ -430,16 +520,31 @@ window.onload=function(){
         renderColorAdvice(flowStem);
     }catch(e){document.getElementById('lunarDateText').innerText='農曆資料載入失敗，請重新整理。';console.error(e);}
 
-    // 讀取上次排盤資料，自動帶入並顯示結果
+    // 讀取歷史命盤清單並顯示標籤
+    renderHistoryChips(0);
+
+    // 自動帶入最近一次排盤資料並顯示結果
     try {
-        var saved = localStorage.getItem('guangyao_bazi');
-        if (saved) {
-            var data = JSON.parse(saved);
-            document.getElementById('birthYear').value = data.y;
-            document.getElementById('birthMonth').value = data.m;
-            document.getElementById('birthDay').value = data.d;
-            document.getElementById('birthHour').value = data.h;
-            calcBaZi(true); // true = 不重複寫入、不自動捲動
+        var list = getHistory();
+        if (list.length) {
+            var entry = list[0];
+            document.getElementById('birthYear').value = entry.y;
+            document.getElementById('birthMonth').value = entry.m;
+            document.getElementById('birthDay').value = entry.d;
+            document.getElementById('birthHour').value = entry.h;
+            document.getElementById('birthName').value = entry.name || '';
+            calcBaZi(true);
+        } else {
+            // 相容舊版單筆儲存資料
+            var saved = localStorage.getItem('guangyao_bazi');
+            if (saved) {
+                var old = JSON.parse(saved);
+                document.getElementById('birthYear').value = old.y;
+                document.getElementById('birthMonth').value = old.m;
+                document.getElementById('birthDay').value = old.d;
+                document.getElementById('birthHour').value = old.h;
+                calcBaZi(true);
+            }
         }
     } catch(e) { console.warn('無法讀取上次命盤資料', e); }
 };
