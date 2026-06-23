@@ -631,67 +631,101 @@ window.onload=function(){
         c.width = size; c.height = size;
         var ctx = c.getContext('2d');
 
-        // 背景漸層
-        var bgGrad = ctx.createRadialGradient(256,200,0, 256,256,320);
-        bgGrad.addColorStop(0, '#2A2318');
-        bgGrad.addColorStop(1, '#0E0C09');
+        // 背景滿版（深藍黑），不留白邊，讓系統自己裁切圓角
+        var bgGrad = ctx.createLinearGradient(0, 0, 0, size);
+        bgGrad.addColorStop(0, '#1C2330');
+        bgGrad.addColorStop(1, '#0C0F15');
         ctx.fillStyle = bgGrad;
-        roundRect(ctx, 0, 0, size, size, 112);
-        ctx.fill();
+        ctx.fillRect(0, 0, size, size);
 
-        // 光暈
-        var glowGrad = ctx.createRadialGradient(256,256,0, 256,256,200);
-        glowGrad.addColorStop(0, 'rgba(197,168,74,0.22)');
-        glowGrad.addColorStop(1, 'rgba(197,168,74,0)');
+        // 中央微光
+        var glowGrad = ctx.createRadialGradient(256,250,0, 256,250,260);
+        glowGrad.addColorStop(0, 'rgba(212,175,90,0.16)');
+        glowGrad.addColorStop(1, 'rgba(212,175,90,0)');
         ctx.fillStyle = glowGrad;
         ctx.fillRect(0, 0, size, size);
 
-        // GUANG YAO
-        ctx.font = '400 24px Georgia, serif';
-        ctx.fillStyle = 'rgba(197,168,74,0.75)';
-        ctx.letterSpacing = '8px';
+        var gold = '#D4AF5A';
+        var goldLight = '#F0CE7E';
+        var cx = 256, cy = 205;
+        var innerR = 16;
+        var outerR = 74;
+
+        // ── 太陽花圖案（花瓣對稱放射狀） ──
+        var totalPetals = 9;
+        var midIndex = (totalPetals - 1) / 2;
+        var angleStep = 17 * Math.PI / 180;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+
+        for (var p = 0; p < totalPetals; p++) {
+            var offset = p - midIndex;
+            var angle = offset * angleStep;
+            var petalLen = outerR - Math.abs(offset) * 6;
+
+            ctx.save();
+            ctx.rotate(angle);
+            var grad = ctx.createLinearGradient(0, -innerR, 0, -petalLen-innerR);
+            grad.addColorStop(0, gold);
+            grad.addColorStop(1, goldLight);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(-10, -innerR*0.5);
+            ctx.quadraticCurveTo(-13, -(innerR+petalLen)/1.5, 0, -(innerR+petalLen));
+            ctx.quadraticCurveTo(13, -(innerR+petalLen)/1.5, 10, -innerR*0.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // 兩端小圓點裝飾
+        ctx.fillStyle = gold;
+        [-(midIndex+1.3), (midIndex+1.3)].forEach(function(offset){
+            var angle = offset * angleStep;
+            var dotR = outerR * 0.5;
+            var dx = Math.sin(angle) * dotR;
+            var dy = -Math.cos(angle) * dotR;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 6, 0, Math.PI*2);
+            ctx.fill();
+        });
+
+        // 花心
+        var coreGrad = ctx.createRadialGradient(0,0,0, 0,0,innerR);
+        coreGrad.addColorStop(0, goldLight);
+        coreGrad.addColorStop(1, gold);
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, innerR, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // ── 笑臉 ──
+        ctx.strokeStyle = gold;
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(256, 250, 40, 0.15*Math.PI, 0.85*Math.PI, false);
+        ctx.stroke();
+
+        // ── 身體（半圓拱形朝上） ──
+        ctx.beginPath();
+        ctx.arc(256, 372, 60, Math.PI, 2*Math.PI, false);
+        ctx.stroke();
+
+        // ── 下方文字「每日運勢」 ──
+        ctx.font = '500 30px "Noto Serif TC", "PingFang TC", "Heiti TC", STSong, serif';
+        ctx.fillStyle = gold;
         ctx.textAlign = 'center';
-        ctx.fillText('GUANG YAO', 256, 158);
-
-        // 上分隔線
-        ctx.strokeStyle = 'rgba(197,168,74,0.4)';
-        ctx.lineWidth = 0.8;
-        ctx.beginPath(); ctx.moveTo(150,174); ctx.lineTo(362,174); ctx.stroke();
-
-        // 光耀 大字
-        ctx.font = '700 136px "Noto Serif TC", "PingFang TC", "Heiti TC", STSong, serif';
-        ctx.fillStyle = '#E8D5A0';
-        ctx.letterSpacing = '6px';
-        ctx.textAlign = 'center';
-        ctx.fillText('光耀', 256, 305);
-
-        // 下分隔線
-        ctx.beginPath(); ctx.moveTo(150,325); ctx.lineTo(362,325); ctx.stroke();
-
-        // 每日運勢
-        ctx.font = '400 28px "Noto Serif TC", "PingFang TC", "Heiti TC", STSong, serif';
-        ctx.fillStyle = 'rgba(197,168,74,0.75)';
-        ctx.letterSpacing = '5px';
-        ctx.textAlign = 'center';
-        ctx.fillText('每日運勢', 256, 368);
+        ctx.textBaseline = 'alphabetic';
+        ctx.letterSpacing = '4px';
+        ctx.fillText('每日運勢', 256, 458);
 
         var png = c.toDataURL('image/png');
         document.getElementById('apple-touch-icon').href = png;
         document.getElementById('favicon').href = png;
-    }
-
-    function roundRect(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x+r, y);
-        ctx.lineTo(x+w-r, y);
-        ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-        ctx.lineTo(x+w, y+h-r);
-        ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-        ctx.lineTo(x+r, y+h);
-        ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-        ctx.lineTo(x, y+r);
-        ctx.quadraticCurveTo(x, y, x+r, y);
-        ctx.closePath();
     }
 
     // 等字體載入後再畫
